@@ -1,0 +1,15 @@
+# LangChain & LangGraph core
+langgraph==0.2.62
+langchain-core==0.3.29
+langchain-ollama==0.2.2
+langchain-groq==0.2.3
+
+# Web Server & API
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.5
+python-dotenv==1.0.1
+python-multipart==0.0.20
+
+# RAG & Document Processing
+pypdf==5.1.0
