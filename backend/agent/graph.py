@@ -64,6 +64,18 @@ _RAG_HINTS = (
     "notes",
 )
 
+_CODEBASE_HINTS = (
+    "add tool",
+    "new tool",
+    "create tool",
+    "register tool",
+    "tools registry",
+    "registry.py",
+    "codebase",
+    "file structure",
+    "project structure",
+)
+
 
 def _preview(text: str, n: int = 160) -> str:
     """Shorten a string for one-line log output."""
@@ -86,9 +98,12 @@ def build_agent_node():
     llm_with_tools = llm.bind_tools(ALL_TOOLS) if ALL_TOOLS else llm
 
     def agent_node(state: AgentState):
-        messages = state["messages"]
-        # Ensure the system prompt is always present as the first message.
-        if not messages or messages[0].type != "system":
+        messages = list(state["messages"])
+        # Ensure the system prompt is always present as the first message, and always use the latest SYSTEM_PROMPT.
+        if messages and messages[0].type == "system":
+            from langchain_core.messages import SystemMessage
+            messages[0] = SystemMessage(content=SYSTEM_PROMPT)
+        else:
             from langchain_core.messages import SystemMessage
             messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
 
@@ -99,6 +114,21 @@ def build_agent_node():
 
             log.info("[agent] answering status-style request directly via system_status")
             return {"messages": [AIMessage(content=system_status.func())]}
+
+        if any(hint in user_text for hint in _CODEBASE_HINTS):
+            from backend.tools.search_workspace import search_workspace
+            search_results = search_workspace.func("registry")
+            if search_results and "No matches found" not in search_results:
+                from langchain_core.messages import SystemMessage
+                context_message = SystemMessage(
+                    content=(
+                        "Actual codebase files and comments about tool registration:\n"
+                        + search_results
+                    )
+                )
+                # Inject right after system prompt
+                messages = messages[:1] + [context_message] + messages[1:]
+                log.info("[agent] injected codebase search context into prompt")
 
         if any(hint in user_text for hint in _RAG_HINTS):
             rag_context = retrieve_context(user_text, k=settings.RAG_TOP_K)

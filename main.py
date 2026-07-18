@@ -74,6 +74,12 @@ def main():
             print(f"  - Database Location: {stats['store_path']}\n")
             continue
 
+        if user_input.lower() == "/clear":
+            from backend.memory.conversation import conversation_memory
+            conversation_memory.clear(SESSION_ID)
+            print("AI: Chat history cleared.\n")
+            continue
+
         with new_turn(session_id=SESSION_ID) as turn_id:
             log.info("New turn %s. input=%r", turn_id, user_input)
             history = conversation_memory.get(SESSION_ID)
