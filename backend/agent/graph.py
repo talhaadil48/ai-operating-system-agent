@@ -13,67 +13,31 @@ Flow matches the architecture doc:
 """
 
 from langgraph.graph import END, START, StateGraph
-from langgraph.prebuilt import ToolNode
 
 from backend.agent.executor import tool_executor_node
 from backend.agent.router import route_after_agent
 from backend.agent.state import AgentState
 from backend.llm.factory import get_llm
 from backend.logging_config import get_logger, log_timing
-from backend.config import settings
-from backend.rag.retrieve import retrieve_context
 from backend.tools.registry import ALL_TOOLS
 
 log = get_logger(__name__)
 
 SYSTEM_PROMPT = (
     "You are a helpful, capable AI assistant that is part of a modular "
-    "single-agent AI operating system. You have access to tools — use "
-    "them whenever they help you answer accurately. For arithmetic, use "
-    "calculator instead of computing it yourself. For current environment or "
-    "status questions, use system_status. For questions about how this codebase works, "
-    "files, structure, or implementation, always use the search_workspace tool to "
-    "inspect the codebase first instead of guessing. For uploaded documents or indexed "
-    "knowledge, use knowledge_base_search or rely on the provided retrieved "
-    "context. If no tool is needed, just answer directly and concisely."
-)
-
-
-_STATUS_HINTS = (
-    "system status",
-    "status",
-    "snapshot",
-    "current working directory",
-    "current directory",
-    "cwd",
-    "environment",
-)
-
-_RAG_HINTS = (
-    "uploaded document",
-    "uploaded docs",
-    "uploaded file",
-    "document",
-    "documents",
-    "knowledge base",
-    "knowledgebase",
-    "kb",
-    "pdf",
-    "manual",
-    "policy",
-    "notes",
-)
-
-_CODEBASE_HINTS = (
-    "add tool",
-    "new tool",
-    "create tool",
-    "register tool",
-    "tools registry",
-    "registry.py",
-    "codebase",
-    "file structure",
-    "project structure",
+    "single-agent AI operating system. You have access to the following tools:\n"
+    "- calculator: evaluate arithmetic expressions\n"
+    "- system_status: get current OS, Python version, working directory, and LLM config\n"
+    "- search_workspace: search all project files for any string or keyword\n"
+    "- knowledge_base_search: search uploaded documents indexed in the RAG store\n\n"
+    "Rules:\n"
+    "1. Always use a tool when it will give a more accurate answer than guessing.\n"
+    "2. For math, always use calculator — never compute it yourself.\n"
+    "3. For questions about this codebase (files, structure, how things work), "
+    "always call search_workspace to look it up — never guess or fabricate file paths.\n"
+    "4. For questions about uploaded documents, use knowledge_base_search.\n"
+    "5. For system/environment info, use system_status.\n"
+    "6. If no tool is needed, answer directly and concisely."
 )
 
 
@@ -81,13 +45,6 @@ def _preview(text: str, n: int = 160) -> str:
     """Shorten a string for one-line log output."""
     text = (text or "").replace("\n", " ").strip()
     return text if len(text) <= n else text[:n] + "…"
-
-
-def _last_user_text(messages) -> str:
-    for message in reversed(messages):
-        if getattr(message, "type", None) == "human":
-            return str(getattr(message, "content", "") or "")
-    return ""
 
 
 def build_agent_node():
@@ -99,50 +56,13 @@ def build_agent_node():
 
     def agent_node(state: AgentState):
         messages = list(state["messages"])
-        # Ensure the system prompt is always present as the first message, and always use the latest SYSTEM_PROMPT.
+
+        # Always ensure system prompt is present and up-to-date.
+        from langchain_core.messages import SystemMessage
         if messages and messages[0].type == "system":
-            from langchain_core.messages import SystemMessage
             messages[0] = SystemMessage(content=SYSTEM_PROMPT)
         else:
-            from langchain_core.messages import SystemMessage
             messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
-
-        user_text = _last_user_text(messages).lower()
-        if any(hint in user_text for hint in _STATUS_HINTS):
-            from langchain_core.messages import AIMessage
-            from backend.tools.system_status import system_status
-
-            log.info("[agent] answering status-style request directly via system_status")
-            return {"messages": [AIMessage(content=system_status.func())]}
-
-        if any(hint in user_text for hint in _CODEBASE_HINTS):
-            from backend.tools.search_workspace import search_workspace
-            search_results = search_workspace.func("registry")
-            if search_results and "No matches found" not in search_results:
-                from langchain_core.messages import SystemMessage
-                context_message = SystemMessage(
-                    content=(
-                        "Actual codebase files and comments about tool registration:\n"
-                        + search_results
-                    )
-                )
-                # Inject right after system prompt
-                messages = messages[:1] + [context_message] + messages[1:]
-                log.info("[agent] injected codebase search context into prompt")
-
-        if any(hint in user_text for hint in _RAG_HINTS):
-            rag_context = retrieve_context(user_text, k=settings.RAG_TOP_K)
-            if rag_context:
-                from langchain_core.messages import SystemMessage
-
-                context_message = SystemMessage(
-                    content=(
-                        "Relevant uploaded-document context:\n"
-                        + "\n\n".join(rag_context)
-                    )
-                )
-                messages = messages[:1] + [context_message] + messages[1:]
-                log.info("[agent] injected %d RAG context chunk(s) into prompt", len(rag_context))
 
         log.info("[agent] invoking LLM with %d message(s) in context", len(messages))
         log.debug(

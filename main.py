@@ -75,7 +75,6 @@ def main():
             continue
 
         if user_input.lower() == "/clear":
-            from backend.memory.conversation import conversation_memory
             conversation_memory.clear(SESSION_ID)
             print("AI: Chat history cleared.\n")
             continue
