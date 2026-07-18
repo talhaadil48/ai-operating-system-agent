@@ -10,6 +10,7 @@ uvicorn[standard]==0.34.0
 pydantic==2.10.5
 python-dotenv==1.0.1
 python-multipart==0.0.20
+requests==2.34.0
 
 # RAG & Document Processing
 pypdf==5.1.0

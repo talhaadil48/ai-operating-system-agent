@@ -11,6 +11,7 @@ from backend.tools.calculator import calculator
 from backend.tools.knowledge_base import knowledge_base_search
 from backend.tools.search_workspace import search_workspace
 from backend.tools.system_status import system_status
+from backend.tools.web_search import web_search
 
 log = get_logger(__name__)
 
@@ -19,6 +20,7 @@ ALL_TOOLS = [
     system_status,
     search_workspace,
     knowledge_base_search,
+    web_search,
 ]
 
 log.info("Tool registry loaded: %s", [t.name for t in ALL_TOOLS])

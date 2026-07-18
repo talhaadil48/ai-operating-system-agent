@@ -48,4 +48,8 @@ class Settings:
     LOG_JSON: bool = os.getenv("LOG_JSON", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+    #SERPER API KEY
+    SERPER_API_KEY: str = os.getenv("SERPER_API_KEY", "")
+
+
 settings = Settings()
