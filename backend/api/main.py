@@ -105,7 +105,12 @@ def chat(req: ChatRequest):
         user_message = HumanMessage(content=req.message)
 
         with log_timing(log, "agent_graph.invoke", level=20):  # INFO level
-            result = agent_graph.invoke({"messages": history + [user_message]})
+            result = agent_graph.invoke(
+                {
+                    "messages": history + [user_message],
+                    "summary": conversation_memory.get_summary(req.session_id)
+                }
+            )
         new_messages = result["messages"]
 
         # Persist the full updated history (includes tool calls/results) for

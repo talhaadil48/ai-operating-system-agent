@@ -76,6 +76,7 @@ def main():
 
         if user_input.lower() == "/clear":
             conversation_memory.clear(SESSION_ID)
+            conversation_memory.clear_summary(SESSION_ID)
             print("AI: Chat history cleared.\n")
             continue
 
@@ -86,7 +87,10 @@ def main():
             try:
                 with log_timing(log, "agent_graph.invoke", level=20):
                     result = agent_graph.invoke(
-                        {"messages": history + [HumanMessage(content=user_input)]}
+                        {
+                            "messages": history + [HumanMessage(content=user_input)],
+                            "summary": conversation_memory.get_summary(SESSION_ID)
+                        }
                     )
             except Exception as exc:
                 log.exception("Agent graph invocation failed for turn %s", turn_id)

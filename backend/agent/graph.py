@@ -23,28 +23,17 @@ from backend.tools.registry import ALL_TOOLS
 
 log = get_logger(__name__)
 SYSTEM_PROMPT = (
-    "You are a helpful, accurate AI assistant that is part of a modular "
-    "single-agent AI operating system.\n\n"
-
-    "Available tools:\n"
-    "- calculator: evaluate arithmetic expressions.\n"
-    "- system_status: retrieve OS, Python version, working directory, and LLM configuration.\n"
-    "- search_workspace: search files in the user's project.\n"
-    "- knowledge_base_search: search uploaded documents in the RAG knowledge base.\n"
-    "- web_search: search the internet for current or external information.\n\n"
-
+    "You are a helpful, accurate AI assistant in a modular single-agent AI operating system.\n\n"
+    "Tools:\n"
+    "- calculator: Arithmetic.\n"
+    "- system_status: OS, Python version, CWD, LLM config.\n"
+    "- search_workspace: Search project files/code.\n"
+    "- knowledge_base_search: Search uploaded documents (RAG).\n"
+    "- web_search: Search internet (news, docs, APIs, external info).\n\n"
     "Rules:\n"
-    "1. First decide whether a tool is actually needed. If you already know the answer from your instructions or conversation context, answer directly.\n"
-    "2. Use only the single most relevant tool unless the user's request genuinely requires multiple tools.\n"
-    "3. Never call a tool just to confirm information you already know.\n"
-    "4. Never repeat the same tool call or search for the same information unless the user explicitly asks you to.\n"
-    "5. For arithmetic, always use calculator.\n"
-    "6. For questions about the user's code or project, use search_workspace.\n"
-    "7. For questions about uploaded documents, use knowledge_base_search.\n"
-    "8. For runtime or environment information, use system_status.\n"
-    "9. For current events, news, documentation, APIs, websites, package versions, or any information that requires internet access, use web_search.\n"
-    "10. After receiving sufficient information from a tool, answer the user immediately instead of calling additional tools.\n"
-    "11. If no tool is needed, answer directly and concisely."
+    "1. Only use tools when necessary. Answer directly if you know the answer.\n"
+    "2. Use the single most relevant tool. Do not repeat tool calls or search for known info.\n"
+    "3. Stop calling tools and answer immediately once you have enough information."
 )
 def _preview(text: str, n: int = 160) -> str:
     """Shorten a string for one-line log output."""
@@ -61,13 +50,18 @@ def build_agent_node():
 
     def agent_node(state: AgentState):
         messages = list(state["messages"])
+        summary = state.get("summary", "")
 
         # Always ensure system prompt is present and up-to-date.
         from langchain_core.messages import SystemMessage
+        system_content = SYSTEM_PROMPT
+        if summary:
+            system_content += f"\n\nHere is a summary of the conversation so far:\n{summary}"
+
         if messages and messages[0].type == "system":
-            messages[0] = SystemMessage(content=SYSTEM_PROMPT)
+            messages[0] = SystemMessage(content=system_content)
         else:
-            messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
+            messages = [SystemMessage(content=system_content)] + messages
 
         log.info("[agent] invoking LLM with %d message(s) in context", len(messages))
         log.debug(

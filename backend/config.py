@@ -40,6 +40,10 @@ class Settings:
     RAG_TOP_K: int = int(os.getenv("RAG_TOP_K", "4"))
     RAG_MAX_UPLOAD_BYTES: int = int(os.getenv("RAG_MAX_UPLOAD_BYTES", "15000000"))
 
+    # Conversation Memory
+    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS", "3"))
+    MEMORY_MAX_SUMMARY_WORDS: int = int(os.getenv("MEMORY_MAX_SUMMARY_WORDS", "250"))
+
     # Debugging / logging (see backend/logging_config.py)
     # DEBUG=true turns on verbose logging everywhere: full prompts sent to
     # the LLM, raw tool args/results, routing decisions, timings, etc.
