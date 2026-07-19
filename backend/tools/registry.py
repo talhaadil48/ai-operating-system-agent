@@ -12,15 +12,53 @@ from backend.tools.knowledge_base import knowledge_base_search
 from backend.tools.search_workspace import search_workspace
 from backend.tools.system_status import system_status
 from backend.tools.web_search import web_search
+from backend.tools.terminal import run_shell_command, kill_process
+from backend.tools.file_manager import (
+    read_file,
+    write_file,
+    copy_file,
+    move_file,
+    delete_file,
+    list_directory,
+    search_files,
+)
+from backend.tools.process_manager import (
+    list_processes,
+    get_system_resource_usage,
+    start_program,
+    stop_process,
+)
 
 log = get_logger(__name__)
 
 ALL_TOOLS = [
+    # Core reasoning / info
     calculator,
     system_status,
+    web_search,
+
+    # Workspace & knowledge base
     search_workspace,
     knowledge_base_search,
-    web_search,
+
+    # Terminal / Shell
+    run_shell_command,
+    kill_process,
+
+    # File Manager
+    read_file,
+    write_file,
+    copy_file,
+    move_file,
+    delete_file,
+    list_directory,
+    search_files,
+
+    # Process Manager
+    list_processes,
+    get_system_resource_usage,
+    start_program,
+    stop_process,
 ]
 
 log.info("Tool registry loaded: %s", [t.name for t in ALL_TOOLS])

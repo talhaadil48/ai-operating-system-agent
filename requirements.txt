@@ -14,3 +14,10 @@ requests==2.34.0
 
 # RAG & Document Processing
 pypdf==5.1.0
+
+# System Tools
+psutil>=5.9
+
+
+#For OS task
+psutil
