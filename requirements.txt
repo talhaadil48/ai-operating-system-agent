@@ -18,6 +18,11 @@ pypdf==5.1.0
 # System Tools
 psutil>=5.9
 
+# Computer Interaction Layer (Tools #19 & #20)
+Pillow>=10.0.0          # screenshot capture (ImageGrab)
+pygetwindow>=0.0.9      # active window title on Windows
+pyautogui>=0.9.54       # cross-platform screenshot fallback
+
 
 #For OS task
 psutil

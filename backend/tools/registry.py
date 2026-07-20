@@ -29,6 +29,10 @@ from backend.tools.process_manager import (
     stop_process,
 )
 
+# Computer Interaction Layer
+from backend.tools.screen_capture import capture_screen
+from backend.tools.screen_analyzer import analyze_screen
+
 log = get_logger(__name__)
 
 ALL_TOOLS = [
@@ -59,6 +63,10 @@ ALL_TOOLS = [
     get_system_resource_usage,
     start_program,
     stop_process,
+
+    # Computer Interaction Layer
+    capture_screen,
+    analyze_screen,
 ]
 
 log.info("Tool registry loaded: %s", [t.name for t in ALL_TOOLS])

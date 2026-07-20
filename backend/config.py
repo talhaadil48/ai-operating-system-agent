@@ -55,5 +55,12 @@ class Settings:
     #SERPER API KEY
     SERPER_API_KEY: str = os.getenv("SERPER_API_KEY", "")
 
+    # Computer Interaction Layer (Tools #19 & #20)
+    # Vision model for screen analysis — must be a model with vision support.
+    # Ollama options: llava, minicpm-v, moondream, bakllava
+    # Groq option: llama-4-scout-17b (used automatically when LLM_PROVIDER=groq)
+    VISION_MODEL: str = os.getenv("VISION_MODEL", "llava")
+    SCREENSHOT_DIR: str = os.getenv("SCREENSHOT_DIR", ".ai_os/screenshots")
+
 
 settings = Settings()
