@@ -23,10 +23,20 @@ class Settings:
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     OLLAMA_TEMPERATURE: float = float(os.getenv("OLLAMA_TEMPERATURE", "0.3"))
 
-    # Groq
-    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    # Groq — supports up to 3 keys with automatic fallback.
+    # GROQ_API_KEY_1 is tried first; 2 and 3 are backups.
+    # GROQ_API_KEY is accepted as an alias for key 1.
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")  # legacy / alias
+    GROQ_API_KEY_1: str = os.getenv("GROQ_API_KEY_1") or os.getenv("GROQ_API_KEY", "")
+    GROQ_API_KEY_2: str = os.getenv("GROQ_API_KEY_2", "")
+    GROQ_API_KEY_3: str = os.getenv("GROQ_API_KEY_3", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
     GROQ_TEMPERATURE: float = float(os.getenv("GROQ_TEMPERATURE", "0.3"))
+
+    # Gemini — last-resort fallback when all Groq keys are exhausted.
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    GEMINI_TEMPERATURE: float = float(os.getenv("GEMINI_TEMPERATURE", "0.3"))
 
     # API
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
@@ -52,8 +62,14 @@ class Settings:
     LOG_JSON: bool = os.getenv("LOG_JSON", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
-    #SERPER API KEY
+    # SERPER API KEY
     SERPER_API_KEY: str = os.getenv("SERPER_API_KEY", "")
+
+    @property
+    def groq_api_keys(self) -> list[str]:
+        """Return the list of configured Groq API keys (non-empty only)."""
+        candidates = [self.GROQ_API_KEY_1, self.GROQ_API_KEY_2, self.GROQ_API_KEY_3]
+        return [k.strip() for k in candidates if k and k.strip()]
 
 
 settings = Settings()

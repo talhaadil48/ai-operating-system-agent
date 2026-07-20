@@ -28,6 +28,8 @@ from backend.tools.process_manager import (
     start_program,
     stop_process,
 )
+from backend.tools.app_launcher import open_app_or_url
+from backend.tools.screen_analyzer import analyze_screen
 
 log = get_logger(__name__)
 
@@ -59,6 +61,10 @@ ALL_TOOLS = [
     get_system_resource_usage,
     start_program,
     stop_process,
+
+    # System Interactions
+    open_app_or_url,
+    analyze_screen,
 ]
 
 log.info("Tool registry loaded: %s", [t.name for t in ALL_TOOLS])

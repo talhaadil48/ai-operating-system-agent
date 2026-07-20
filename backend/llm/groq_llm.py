@@ -40,4 +40,5 @@ class GroqProvider(BaseLLMProvider):
             model=self.model,
             api_key=self.api_key,
             temperature=self.temperature,
+            max_retries=0,
         )

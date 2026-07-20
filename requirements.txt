@@ -3,6 +3,7 @@ langgraph==0.2.62
 langchain-core==0.3.29
 langchain-ollama==0.2.2
 langchain-groq==0.2.3
+langchain-google-genai>=2.0.0   # Gemini fallback provider
 
 # Web Server & API
 fastapi==0.115.6
@@ -17,7 +18,7 @@ pypdf==5.1.0
 
 # System Tools
 psutil>=5.9
-
+Pillow>=10.0.0
 
 #For OS task
 psutil
