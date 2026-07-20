@@ -30,6 +30,12 @@ from backend.tools.process_manager import (
 )
 from backend.tools.app_launcher import open_app_or_url
 from backend.tools.screen_analyzer import analyze_screen
+from backend.tools.web_utilities import (
+    scrape_webpage,
+    summarize_webpage,
+    check_website_status,
+    get_weather,
+)
 
 log = get_logger(__name__)
 
@@ -65,6 +71,12 @@ ALL_TOOLS = [
     # System Interactions
     open_app_or_url,
     analyze_screen,
+
+    # Web Utilities
+    scrape_webpage,
+    summarize_webpage,
+    check_website_status,
+    get_weather,
 ]
 
 log.info("Tool registry loaded: %s", [t.name for t in ALL_TOOLS])

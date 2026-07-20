@@ -12,6 +12,7 @@ pydantic==2.10.5
 python-dotenv==1.0.1
 python-multipart==0.0.20
 requests==2.34.0
+beautifulsoup4>=4.12.0   # HTML parsing for scraper tool
 
 # RAG & Document Processing
 pypdf==5.1.0

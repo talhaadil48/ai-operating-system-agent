@@ -9,7 +9,6 @@ log = get_logger(__name__)
 
 URL = "https://google.serper.dev/search"
 SERVER_API_KEY = settings.SERPER_API_KEY
-print("SERPER_API_KEY:", SERVER_API_KEY)
 
 @tool
 def web_search(query: str) -> str:
