@@ -61,6 +61,12 @@ class Settings:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "DEBUG" if DEBUG else "INFO")
     LOG_JSON: bool = os.getenv("LOG_JSON", "false").strip().lower() in {"1", "true", "yes", "on"}
 
+    # Database & Long-Term Memory (LTM)
+    POSTGRES_URI: str = os.getenv("POSTGRES_URI", "postgresql://postgres:postgres@localhost:5432/ai_os")
+    LTM_MAX_FACTS: int = int(os.getenv("LTM_MAX_FACTS", "10"))
+    LTM_MAX_SUMMARY_WORDS: int = int(os.getenv("LTM_MAX_SUMMARY_WORDS", "300"))
+
+
 
     # SERPER API KEY
     SERPER_API_KEY: str = os.getenv("SERPER_API_KEY", "")

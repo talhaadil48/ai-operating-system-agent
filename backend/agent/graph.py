@@ -20,6 +20,7 @@ from backend.agent.state import AgentState
 from backend.llm.factory import get_llm
 from backend.logging_config import get_logger, log_timing
 from backend.tools.registry import ALL_TOOLS
+from backend.memory.long_term import long_term_memory
 
 log = get_logger(__name__)
 SYSTEM_PROMPT = (
@@ -28,6 +29,9 @@ SYSTEM_PROMPT = (
     "- calculator: Arithmetic.\n"
     "- system_status: OS, Python version, CWD, LLM config.\n"
     "- web_search: Search internet (news, docs, APIs, external info).\n"
+    "- save_long_term_memory: Save user preference/fact to PostgreSQL long term memory.\n"
+    "- recall_long_term_memories: Recall user preferences/facts saved in PostgreSQL.\n"
+    "- delete_long_term_memory: Remove a long term memory record by ID.\n"
     "- search_workspace: Search project files/code by text.\n"
     "- knowledge_base_search: Search uploaded documents (RAG).\n"
     "- run_shell_command: Run any shell/terminal command, capture stdout+stderr.\n"
@@ -52,7 +56,9 @@ SYSTEM_PROMPT = (
     "Rules:\n"
     "1. Only use tools when necessary. Answer directly if you know the answer.\n"
     "2. Use the single most relevant tool. Do not repeat tool calls or search for known info.\n"
-    "3. Stop calling tools and answer immediately once you have enough information."
+    "3. ONLY call `save_long_term_memory` when the user EXPLICITLY states a NEW fact, preference, or setting (e.g., 'My name is X', 'I prefer Y', 'Remember Z'). NEVER call `save_long_term_memory` when the user is asking a question!\n"
+    "4. Stop calling tools and answer immediately once you have enough information."
+
 )
 def _preview(text: str, n: int = 160) -> str:
     """Shorten a string for one-line log output."""
@@ -71,11 +77,19 @@ def build_agent_node():
         messages = list(state["messages"])
         summary = state.get("summary", "")
 
+        # Fetch Long-Term Memory (PostgreSQL) formatted safely under token limits
+        ltm_prompt_block = long_term_memory.format_for_prompt("default")
+
         # Always ensure system prompt is present and up-to-date.
         from langchain_core.messages import SystemMessage
         system_content = SYSTEM_PROMPT
+
+        if ltm_prompt_block:
+            system_content += f"\n\n### LONG-TERM MEMORY & USER PREFERENCES (Stored in PostgreSQL):\n{ltm_prompt_block}"
+
         if summary:
             system_content += f"\n\nHere is a summary of the conversation so far:\n{summary}"
+
 
         if messages and messages[0].type == "system":
             messages[0] = SystemMessage(content=system_content)

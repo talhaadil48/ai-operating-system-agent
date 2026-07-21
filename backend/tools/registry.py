@@ -36,6 +36,11 @@ from backend.tools.web_utilities import (
     check_website_status,
     get_weather,
 )
+from backend.tools.memory_tool import (
+    save_long_term_memory,
+    recall_long_term_memories,
+    delete_long_term_memory,
+)
 
 log = get_logger(__name__)
 
@@ -44,6 +49,12 @@ ALL_TOOLS = [
     calculator,
     system_status,
     web_search,
+
+    # Long-Term Memory (PostgreSQL)
+    save_long_term_memory,
+    recall_long_term_memories,
+    delete_long_term_memory,
+
 
     # Workspace & knowledge base
     search_workspace,
