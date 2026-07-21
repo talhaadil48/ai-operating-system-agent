@@ -114,23 +114,45 @@ class LongTermMemory:
             fallback_items = self._fallback_facts.get(user_id, [])
             return fallback_items[:max_limit]
 
-    def delete_memory(self, memory_id: str) -> bool:
-        """Delete a specific memory by ID."""
+    def delete_memory(self, identifier: str, user_id: str = "default") -> bool:
+        """Delete a specific memory by UUID or matching fact keywords in PostgreSQL database."""
         self._ensure_init()
-        log.info("[long_term_memory] [DEBUG] Deleting memory ID=%s from PostgreSQL database", memory_id)
+        identifier_clean = identifier.strip()
+        log.info("[long_term_memory] [DEBUG] Attempting to delete memory (identifier=%r) from PostgreSQL database", identifier_clean)
         try:
             SessionLocal = get_session_factory()
             with SessionLocal() as db:
-                record = db.query(LongTermMemoryRecord).filter(LongTermMemoryRecord.id == memory_id).first()
+                # 1. Try exact UUID match
+                record = db.query(LongTermMemoryRecord).filter(
+                    LongTermMemoryRecord.user_id == user_id,
+                    LongTermMemoryRecord.id == identifier_clean
+                ).first()
+
+                # 2. If not found, try text/keyword match on fact column
+                if not record:
+                    # Clean search terms e.g. "favourite_color_is_blue" -> "blue"
+                    search_term = identifier_clean.replace("_", " ")
+                    # Extract last word or key descriptor if multiple words
+                    words = [w for w in search_term.split() if len(w) > 2]
+                    query = db.query(LongTermMemoryRecord).filter(LongTermMemoryRecord.user_id == user_id)
+                    for w in words:
+                        query = query.filter(LongTermMemoryRecord.fact.ilike(f"%{w}%"))
+                    record = query.first()
+
                 if record:
+                    deleted_id = record.id
+                    deleted_fact = record.fact
                     db.delete(record)
                     db.commit()
-                    log.info("[long_term_memory] [DEBUG] Successfully deleted memory ID=%s from PostgreSQL", memory_id)
+                    log.info("[long_term_memory] [DEBUG] Successfully deleted memory ID=%s (fact=%r) from PostgreSQL", deleted_id, deleted_fact)
                     return True
+
+                log.warning("[long_term_memory] [DEBUG] No memory record matched identifier %r in PostgreSQL", identifier_clean)
                 return False
         except Exception:
-            log.exception("[long_term_memory] Failed to delete memory ID=%s from PostgreSQL", memory_id)
+            log.exception("[long_term_memory] Failed to delete memory identifier %r from PostgreSQL", identifier_clean)
             return False
+
 
     def format_for_prompt(self, user_id: str) -> str:
         """

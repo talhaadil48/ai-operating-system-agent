@@ -47,14 +47,15 @@ def recall_long_term_memories(user_id: str = "default") -> str:
 
 
 @tool
-def delete_long_term_memory(memory_id: str) -> str:
-    """Delete a specific long-term memory record from PostgreSQL database by its unique memory_id.
+def delete_long_term_memory(memory_id_or_keyword: str) -> str:
+    """Delete a long-term memory record from PostgreSQL database by its UUID OR by fact keyword (e.g. 'blue', 'favourite_color_is_blue', or UUID).
 
     Args:
-        memory_id: The UUID of the memory record to remove.
+        memory_id_or_keyword: The UUID or descriptive keyword of the memory to remove.
     """
-    log.info("[tool:delete_long_term_memory] Deleting memory ID=%s", memory_id)
-    success = long_term_memory.delete_memory(memory_id)
+    log.info("[tool:delete_long_term_memory] Deleting memory identifier=%s", memory_id_or_keyword)
+    success = long_term_memory.delete_memory(memory_id_or_keyword)
     if success:
-        return f"Successfully deleted memory record ID={memory_id} from PostgreSQL database."
-    return f"Failed to delete memory record ID={memory_id} (record not found or database error)."
+        return f"Successfully deleted memory record ('{memory_id_or_keyword}') from PostgreSQL database."
+    return f"Failed to delete memory record ('{memory_id_or_keyword}'). No matching record found in database."
+

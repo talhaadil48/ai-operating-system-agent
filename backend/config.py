@@ -30,7 +30,9 @@ class Settings:
     GROQ_API_KEY_1: str = os.getenv("GROQ_API_KEY_1") or os.getenv("GROQ_API_KEY", "")
     GROQ_API_KEY_2: str = os.getenv("GROQ_API_KEY_2", "")
     GROQ_API_KEY_3: str = os.getenv("GROQ_API_KEY_3", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+
     GROQ_TEMPERATURE: float = float(os.getenv("GROQ_TEMPERATURE", "0.3"))
 
     # Gemini — last-resort fallback when all Groq keys are exhausted.
@@ -50,9 +52,10 @@ class Settings:
     RAG_TOP_K: int = int(os.getenv("RAG_TOP_K", "4"))
     RAG_MAX_UPLOAD_BYTES: int = int(os.getenv("RAG_MAX_UPLOAD_BYTES", "15000000"))
 
-    # Conversation Memory
-    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS", "3"))
-    MEMORY_MAX_SUMMARY_WORDS: int = int(os.getenv("MEMORY_MAX_SUMMARY_WORDS", "250"))
+    # Conversation Memory — keep window at 1 turn to stay well under 12k TPM
+    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS", "1"))
+    MEMORY_MAX_SUMMARY_WORDS: int = int(os.getenv("MEMORY_MAX_SUMMARY_WORDS", "60"))
+
 
     # Debugging / logging (see backend/logging_config.py)
     # DEBUG=true turns on verbose logging everywhere: full prompts sent to
@@ -63,8 +66,9 @@ class Settings:
 
     # Database & Long-Term Memory (LTM)
     POSTGRES_URI: str = os.getenv("POSTGRES_URI", "postgresql://postgres:postgres@localhost:5432/ai_os")
-    LTM_MAX_FACTS: int = int(os.getenv("LTM_MAX_FACTS", "10"))
-    LTM_MAX_SUMMARY_WORDS: int = int(os.getenv("LTM_MAX_SUMMARY_WORDS", "300"))
+    LTM_MAX_FACTS: int = int(os.getenv("LTM_MAX_FACTS", "5"))
+    LTM_MAX_SUMMARY_WORDS: int = int(os.getenv("LTM_MAX_SUMMARY_WORDS", "150"))
+
 
 
 

@@ -25,41 +25,13 @@ from backend.memory.long_term import long_term_memory
 log = get_logger(__name__)
 SYSTEM_PROMPT = (
     "You are a helpful, accurate AI assistant in a modular single-agent AI operating system.\n\n"
-    "Tools:\n"
-    "- calculator: Arithmetic.\n"
-    "- system_status: OS, Python version, CWD, LLM config.\n"
-    "- web_search: Search internet (news, docs, APIs, external info).\n"
-    "- save_long_term_memory: Save user preference/fact to PostgreSQL long term memory.\n"
-    "- recall_long_term_memories: Recall user preferences/facts saved in PostgreSQL.\n"
-    "- delete_long_term_memory: Remove a long term memory record by ID.\n"
-    "- search_workspace: Search project files/code by text.\n"
-    "- knowledge_base_search: Search uploaded documents (RAG).\n"
-    "- run_shell_command: Run any shell/terminal command, capture stdout+stderr.\n"
-    "- kill_process: Kill a process by PID.\n"
-    "- read_file: Read a file's contents.\n"
-    "- write_file: Write/create a file.\n"
-    "- copy_file: Copy a file or directory.\n"
-    "- move_file: Move or rename a file or directory.\n"
-    "- delete_file: Delete a file or directory permanently.\n"
-    "- list_directory: List directory contents.\n"
-    "- search_files: Find files by name pattern or content.\n"
-    "- list_processes: List running processes (filter by name).\n"
-    "- get_system_resource_usage: Get CPU, RAM, and disk usage.\n"
-    "- start_program: Launch a program/process in the background.\n"
-    "- stop_process: Gracefully stop a process by PID.\n"
-    "- open_app_or_url: Open any desktop app (e.g. chrome, notepad), folder, file, or URL link.\n"
-    "- analyze_screen: Take a screenshot of the user's primary screen and analyze it with a vision LLM.\n"
-    "- scrape_webpage: Extract clean main body text from any website URL (truncated to save token limits).\n"
-    "- summarize_webpage: Automatically fetch and summarize long web pages by chunking to save token limits.\n"
-    "- check_website_status: Check if a website is online and responsive.\n"
-    "- get_weather: Retrieve the current weather forecast details for any location/city.\n\n"
     "Rules:\n"
     "1. Only use tools when necessary. Answer directly if you know the answer.\n"
     "2. Use the single most relevant tool. Do not repeat tool calls or search for known info.\n"
-    "3. ONLY call `save_long_term_memory` when the user EXPLICITLY states a NEW fact, preference, or setting (e.g., 'My name is X', 'I prefer Y', 'Remember Z'). NEVER call `save_long_term_memory` when the user is asking a question!\n"
+    "3. ONLY call `save_long_term_memory` when the user EXPLICITLY states a NEW fact, preference, or setting (e.g. 'My name is X'). NEVER call `save_long_term_memory` when the user is asking a question!\n"
     "4. Stop calling tools and answer immediately once you have enough information."
-
 )
+
 def _preview(text: str, n: int = 160) -> str:
     """Shorten a string for one-line log output."""
     text = (text or "").replace("\n", " ").strip()

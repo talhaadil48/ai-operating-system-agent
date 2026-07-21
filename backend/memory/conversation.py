@@ -30,13 +30,27 @@ class ConversationMemory:
         return self._summaries.get(session_id, "")
 
     def append(self, session_id: str, messages: List[BaseMessage]) -> None:
+        # Sanitize/truncate oversized tool outputs to protect token limits
+        sanitized_messages = []
+        for msg in messages:
+            if msg.type == "tool" and isinstance(msg.content, str) and len(msg.content) > 120:
+                # Copy message with truncated content — keep very short to protect TPM limits
+                from langchain_core.messages import ToolMessage
+                msg = ToolMessage(
+                    content=msg.content[:120] + "…[truncated]",
+                    tool_call_id=getattr(msg, "tool_call_id", ""),
+                    name=getattr(msg, "name", "")
+                )
+            sanitized_messages.append(msg)
+
         session_messages = self._sessions.setdefault(session_id, [])
-        session_messages.extend(messages)
+        session_messages.extend(sanitized_messages)
         log.debug(
             "[memory] append(session=%s, +%d messages) -> %d total before pruning",
-            session_id, len(messages), len(session_messages),
+            session_id, len(sanitized_messages), len(session_messages),
         )
         self._prune_and_summarize(session_id)
+
 
     def clear(self, session_id: str) -> None:
         had = len(self._sessions.get(session_id, []))
@@ -69,8 +83,8 @@ class ConversationMemory:
                     else:
                         new_summary = new_chunk_summary
                     
-                    # Consolidate summary if it gets too long (e.g. over 400 words)
-                    if len(new_summary.split()) > 400:
+                    # Consolidate summary if it gets too long (cap at 60 words)
+                    if len(new_summary.split()) > 60:
                         new_summary = self._consolidate_summary(new_summary)
                         
                     self._summaries[session_id] = new_summary
@@ -89,9 +103,8 @@ class ConversationMemory:
             formatted_history = self._format_messages_for_summary(messages)
             
             prompt = (
-                "Write a concise, bullet-point summary of the following conversation snippet. "
-                "Focus on key facts discussed, user preferences, decisions made, or actions taken. "
-                "Keep it under 3-4 bullet points and less than 80 words. Do not include intro or outro.\n\n"
+                "Summarize this conversation in max 30 words as bullet points. "
+                "Only keep critical facts, decisions, or preferences. No intro or outro.\n\n"
                 f"{formatted_history}"
             )
             
@@ -108,11 +121,8 @@ class ConversationMemory:
             llm = get_llm()
             
             prompt = (
-                "You are tasked with consolidating a long list of historical conversation summary points. "
-                "Combine redundant points, preserve all critical facts, user identity, preferences, decisions, "
-                "and current status. Keep it as a concise, structured bulleted list under 200 words. "
-                "Do not include intro or outro.\n\n"
-                f"Historical Summary:\n{summary}"
+                "Consolidate these summary points into max 40 words. Keep only critical facts. No intro or outro.\n\n"
+                f"{summary}"
             )
             
             response = llm.invoke([SystemMessage(content=prompt)])
@@ -132,12 +142,9 @@ class ConversationMemory:
                 calls = ", ".join(f"{c['name']}({c['args']})" for c in msg.tool_calls)
                 content = f"[Calls tools: {calls}]"
             elif role == "tool":
-                # Truncate tool response to prevent token bloat during summarization
+                # Aggressively truncate tool responses before summarizing
                 content_str = str(content)
-                if len(content_str) > 200:
-                    content = f"[Tool output truncated: {content_str[:200]}...]"
-                else:
-                    content = f"[Tool output: {content_str}]"
+                content = f"[Tool: {content_str[:80]}…]" if len(content_str) > 80 else f"[Tool: {content_str}]"
             formatted.append(f"{role.capitalize()}: {content}")
         return "\n".join(formatted)
 
